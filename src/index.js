@@ -43,7 +43,7 @@ async function analyze(request, env) {
       }),
     }
   );
-  if (!res.ok) return json({ error: "AI 호출에 실패했어요. 잠시 후 다시 시도해주세요." }, 502);
+    if (!res.ok) { const t = await res.text(); return json({ error: "AI 호출 실패 (" + res.status + "): " + t.slice(0, 300) }, 502); }
   const data = await res.json();
   const text = (data.candidates?.[0]?.content?.parts || []).map((p) => p.text || "").join("").replace(/```json|```/g, "").trim();
   try { return json(JSON.parse(text)); }
