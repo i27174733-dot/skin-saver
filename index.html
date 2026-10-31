@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>스킨세이버 - 화장품 성분 궁합 분석</title>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f6f3f8;--card:#fff;--ink:#241f2d;--sub:#6d6677;--line:#e2dce9;--plum:#6a3fa0;--ok:#2b7a58;--mid:#6d6677;--warn:#b86a12;--bad:#b3363d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Noto Sans KR",system-ui,sans-serif}
+main{max-width:680px;margin:0 auto;padding:28px 18px 60px}
+h1{font:700 2.1rem/1.2 "Gowun Batang",serif;margin:0 0 6px}
+.lead{color:var(--sub);margin:0 0 24px}
+section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+h2{font-size:1.05rem;margin:0 0 12px}
+.q{margin:14px 0 6px;font-weight:500;font-size:.95rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips label{cursor:pointer}
+.chips input{position:absolute;opacity:0}
+.chips span{display:inline-block;padding:6px 13px;border:1px solid var(--line);border-radius:99px;font-size:.92rem}
+.chips input:checked+span{background:var(--plum);border-color:var(--plum);color:#fff}
+.chips input:focus-visible+span{outline:2px solid var(--plum);outline-offset:2px}
+input[type=text],select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
+.drop{display:block;border:2px dashed var(--line);border-radius:12px;padding:22px;text-align:center;color:var(--sub);cursor:pointer}
+.drop img{max-width:100%;max-height:260px;border-radius:8px}
+#file{display:none}
+button{width:100%;padding:14px;border:0;border-radius:10px;background:var(--plum);color:#fff;font:700 1rem "Noto Sans KR",sans-serif;cursor:pointer}
+button:disabled{opacity:.5;cursor:wait}
+#msg{color:var(--bad);margin:10px 0 0;min-height:1.2em}
+.score{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.num{font:700 2.6rem/1 "Gowun Batang",serif}
+.badge{padding:3px 12px;border-radius:99px;color:#fff;font-weight:700;font-size:.9rem}
+.추천{background:var(--ok)}.주의{background:var(--warn)}.비추천{background:var(--bad)}
+.ing{border-top:1px solid var(--line);padding:10px 0}
+.ing b{margin-right:6px}
+.fit{font-size:.8rem;font-weight:700;padding:1px 8px;border-radius:99px;border:1px solid}
+.맞음{color:var(--ok)}.보통{color:var(--mid)}.ing .주의{color:var(--warn)}
+.ing p{margin:3px 0 0;color:var(--sub);font-size:.92rem}
+.box{border-left:4px solid var(--warn);background:#fbf3e8;padding:10px 14px;border-radius:6px;margin:10px 0}
+.box ul{margin:4px 0 0;padding-left:18px}
+.note{font-size:.82rem;color:var(--sub);text-align:center;margin-top:24px}
+</style>
+</head>
+<body>
+<main>
+<h1>스킨세이버</h1>
+<p class="lead">성분표 사진을 올리면, 내 피부에 맞는지 알려드려요.</p>
+
+<section>
+<h2>내 피부 프로필</h2>
+<div class="q">피부 타입</div>
+<div class="chips" data-name="skin" data-type="radio" data-opts="건성,지성,복합성,중성,민감성"></div>
+<div class="q">피부 고민 (여러 개 선택 가능)</div>
+<div class="chips" data-name="concerns" data-opts="여드름,건조,홍조,색소침착,모공,주름,각질,민감"></div>
+<div class="q">알레르기·피하고 싶은 성분</div>
+<input type="text" id="allergy" placeholder="예: 향료, 알코올, 특정 오일">
+<div class="q">임신·수유</div>
+<div class="chips" data-name="preg" data-type="radio" data-opts="해당 없음,임신 중,수유 중"></div>
+<div class="q">연령대</div>
+<select id="age"><option>10대</option><option selected>20대</option><option>30대</option><option>40대</option><option>50대 이상</option></select>
+<div class="q">지금 쓰는 활성 성분</div>
+<div class="chips" data-name="actives" data-opts="레티놀,AHA,BHA,비타민C,나이아신아마이드,없음"></div>
+<div class="q">선호 조건</div>
+<div class="chips" data-name="prefs" data-opts="무향,무알코올,비건,논코메도제닉"></div>
+<div class="q">제품 종류</div>
+<select id="ptype"><option>토너</option><option>세럼</option><option>크림</option><option>선크림</option><option>클렌저</option><option>기타</option></select>
+</section>
+
+<section>
+<h2>성분표 사진</h2>
+<label class="drop" for="file"><span id="hint">사진을 찍거나 선택하세요</span><img id="prev" alt="" hidden></label>
+<input type="file" id="file" accept="image/*">
+</section>
+
+<button id="go">내 피부와 궁합 분석하기</button>
+<p id="msg" role="alert"></p>
+<div id="out"></div>
+<p class="note">의학적 진단이 아닌 참고용 정보입니다. 피부에 이상이 있으면 전문의와 상담하세요. 업로드한 사진은 서버에 저장되지 않아요.</p>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let imgData=null;
+
+document.querySelectorAll(".chips").forEach(el=>{
+  const radio=el.dataset.type==="radio";
+  el.innerHTML=el.dataset.opts.split(",").map(o=>`<label><input type="${radio?"radio":"checkbox"}" name="${el.dataset.name}" value="${o}"><span>${o}</span></label>`).join("");
+});
+const vals=n=>[...document.querySelectorAll(`input[name=${n}]:checked`)].map(i=>i.value);
+const getProfile=()=>({skin:vals("skin")[0]||"미입력",concerns:vals("concerns"),allergy:$("#allergy").value,pregnancy:vals("preg")[0]||"해당 없음",age:$("#age").value,actives:vals("actives"),prefs:vals("prefs"),product_type:$("#ptype").value});
+
+// 프로필 저장/불러오기 (브라우저 안에서만)
+function save(){try{localStorage.setItem("profile",JSON.stringify({p:getProfile()}))}catch(e){}}
+function load(){try{const p=JSON.parse(localStorage.getItem("profile")||"{}").p;if(!p)return;
+  const set=(n,a)=>document.querySelectorAll(`input[name=${n}]`).forEach(i=>i.checked=a.includes(i.value));
+  set("skin",[p.skin]);set("concerns",p.concerns||[]);set("preg",[p.pregnancy]);set("actives",p.actives||[]);set("prefs",p.prefs||[]);
+  $("#allergy").value=p.allergy||"";$("#age").value=p.age||"20대";$("#ptype").value=p.product_type||"토너";}catch(e){}}
+load();
+document.addEventListener("change",e=>{if(e.target.id!=="file")save()});
+$("#allergy").addEventListener("input",save);
+
+// 사진 축소 후 base64로 변환
+$("#file").addEventListener("change",e=>{
+  const f=e.target.files[0];if(!f)return;
+  const img=new Image();img.onload=()=>{
+    const s=Math.min(1,1400/Math.max(img.width,img.height));
+    const c=document.createElement("canvas");c.width=img.width*s;c.height=img.height*s;
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+    const url=c.toDataURL("image/jpeg",0.85);imgData=url.split(",")[1];
+    $("#prev").src=url;$("#prev").hidden=false;$("#hint").hidden=true;
+  };img.onerror=()=>{$("#msg").textContent="이미지를 열 수 없어요. 다른 사진으로 시도해주세요."};
+  img.src=URL.createObjectURL(f);
+});
+
+$("#go").addEventListener("click",async()=>{
+  $("#msg").textContent="";
+  if(!imgData){$("#msg").textContent="성분표 사진을 먼저 올려주세요.";return}
+  const b=$("#go");b.disabled=true;b.textContent="분석 중이에요...";$("#out").innerHTML="";
+  try{
+    const r=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:imgData,profile:getProfile()})});
+    const d=await r.json();
+    if(d.error){$("#msg").textContent=d.error}else{render(d)}
+  }catch(e){$("#msg").textContent="네트워크 오류가 났어요. 다시 시도해주세요."}
+  b.disabled=false;b.textContent="내 피부와 궁합 분석하기";
+});
+
+function list(title,arr){return arr&&arr.length?`<div class="box"><b>${title}</b><ul>${arr.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
+function render(d){
+  $("#out").innerHTML=`<section>
+  <div class="score"><span class="num">${esc(d.overall_score)}</span><span class="badge ${esc(d.verdict)}">${esc(d.verdict)}</span></div>
+  <p><b>${esc(d.summary)}</b></p>
+  ${list("주의 성분",d.warnings)}${list("여드름 피부 주의 (코메도제닉)",d.comedogenic)}${list("지금 루틴과 충돌",d.conflicts)}
+  </section><section><h2>성분별 분석</h2>
+  ${(d.ingredients||[]).map(i=>`<div class="ing"><b>${esc(i.name)}</b><span class="fit ${esc(i.fit)}">${esc(i.fit)}</span><p>${esc(i.role)} · ${esc(i.reason)}</p></div>`).join("")}
+  </section><section><h2>사용 팁</h2><p>${esc(d.usage_tip)}</p></section>`;
+  $("#out").scrollIntoView({behavior:"smooth"});
+}
+</script>
+</body>
+</html>
