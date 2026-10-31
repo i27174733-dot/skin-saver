@@ -2,5 +2,6 @@
   "name": "skin-saver",
   "main": "src/index.js",
   "compatibility_date": "2026-10-01",
-  "assets": { "directory": "./public", "binding": "ASSETS" }
+  "assets": { "directory": "./public", "binding": "ASSETS" },
+  "placement": { "region": "aws:us-east-1" }
 }
