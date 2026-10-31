@@ -16,7 +16,15 @@ const MODEL = "gemini-3.8-flash";
 
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), { status, headers: { "Content-Type": "application/json" } });
-
+async function fetchRetry(url, opts, tries = 3) {
+  let res;
+  for (let i = 0; i < tries; i++) {
+    res = await fetch(url, opts);
+    if (res.status !== 503 && res.status !== 429) return res;
+    await new Promise((r) => setTimeout(r, 1500 * (i + 1)));
+  }
+  return res;
+}
 async function analyze(request, env) {
   if (!env.GEMINI_API_KEY) return json({ error: "서버에 API 키가 설정되지 않았어요." }, 500);
   let body;
@@ -25,7 +33,7 @@ async function analyze(request, env) {
   if (!image || typeof image !== "string" || image.length > 6_000_000)
     return json({ error: "이미지가 없거나 너무 커요." }, 400);
 
-  const res = await fetch(
+  const res = await fetchRetry(
     `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
     {
       method: "POST",
