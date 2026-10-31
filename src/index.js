@@ -12,7 +12,7 @@ const SYSTEM = `너는 화장품 성분 분석 도우미야. 사용자가 보낸
 {"product_type":"","overall_score":0,"verdict":"추천|주의|비추천","summary":"한 줄 총평","ingredients":[{"name":"","role":"","fit":"맞음|보통|주의","reason":""}],"warnings":[],"comedogenic":[],"conflicts":[],"usage_tip":""}
 ingredients는 핵심 성분 위주로 최대 15개, 한국어로.`;
 
-const MODEL = "gemini-3.8-flash";
+const MODEL = "gemini-3.5-flash-lite";
 
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), { status, headers: { "Content-Type": "application/json" } });
